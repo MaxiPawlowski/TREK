@@ -184,5 +184,13 @@ const places: TranslationStrings = {
   'places.refresh.empty': 'vacío',
   'places.refresh.now': 'Ahora',
   'places.refresh.new': 'Nuevo',
+  'places.nearHere': 'Cerca de acá',
+  'places.nearTitle': 'Cerca de {name}',
+  'places.nearCount': '{count} lugares a menos de {distance} · unos {minutes} min a pie',
+  'places.nearCount.one': '{count} lugar a menos de {distance} · unos {minutes} min a pie',
+  'places.nearRadius': 'Radio',
+  'places.nearClose': 'Dejar de mostrar lo cercano',
+  'places.nearWalk': '~{minutes} min a pie',
+  'places.nearEmpty': 'No hay nada en este radio. Probá uno más grande.',
 };
 export default places;

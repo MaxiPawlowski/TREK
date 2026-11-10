@@ -21,6 +21,7 @@ import { RT_ALT_BAR_LIFT } from '../roadtrip/useMRtAlternatives'
 import type { MMapAreaProps } from '../MTripShell'
 import type { Poi } from '../../../../components/Map/poiCategories'
 import type { ViewportPadding } from '../../../../utils/mapViewport'
+import { useNearbyMapOverlay } from '../../../../components/Planner/useNearbyMapOverlay'
 
 /** One array, so an explore set switched off does not move every pin on the stage. */
 const NO_POIS: Poi[] = []
@@ -252,6 +253,8 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
   const focus = holdFocus(heldFocus, planner.mapFocusPoints, planner.selectedDayId, planner.alternativeFocusPoints)
   if (focus !== heldFocus) setHeldFocus(focus)
   const focusPending = focus.live && planner.mapFocusPoints.length > 0
+  // "Near this place": the circle, and the camera on the whole radius while it is open.
+  const nearbyOverlay = useNearbyMapOverlay()
 
   // Handed over only once there are roads to frame, not as soon as the picker opens: the
   // engines refit whatever they hold when this padding changes, and while the router is
@@ -386,7 +389,8 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
         // screen; with nothing pending the stage frames itself.
         focusPoints={stageMap
           ? (focusPending ? planner.mapFocusPoints : stageMap.focusPoints)
-          : planner.overviewActive ? planner.tripOverview.focusPoints : undefined}
+          : planner.overviewActive ? planner.tripOverview.focusPoints : nearbyOverlay?.focusPoints}
+        nearbyCircle={stageMap || planner.overviewActive ? null : nearbyOverlay?.circle}
         routeVias={mapVias}
         showTransitRoutes={onStage ? false : planner.transitRoutesShown}
         // The route toggle belongs to one day, so the map needs that day to know

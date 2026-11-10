@@ -190,5 +190,13 @@ const places: TranslationStrings = {
   'places.refresh.empty': 'empty',
   'places.refresh.now': 'Now',
   'places.refresh.new': 'New',
+  'places.nearHere': 'Near here',
+  'places.nearTitle': 'Near {name}',
+  'places.nearCount': '{count} places within {distance} · about {minutes} min on foot',
+  'places.nearCount.one': '{count} place within {distance} · about {minutes} min on foot',
+  'places.nearRadius': 'Radius',
+  'places.nearClose': 'Stop showing what is near',
+  'places.nearWalk': '~{minutes} min walk',
+  'places.nearEmpty': 'Nothing in this radius. Try a larger one.',
 };
 export default places;

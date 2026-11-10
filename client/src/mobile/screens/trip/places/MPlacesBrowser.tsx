@@ -26,6 +26,8 @@ import { filterPool, firstPlannedDayNumbers, plannedPlaceIds } from './placesBro
 import { MCategoryFilterList, MRatingFloorChips, SquareCheck } from './MPlacesFilterControls'
 import { countActivePlacesFilters } from '../../../../utils/placesFilter'
 import { usePlacesPool } from '../../../../components/Planner/usePlacesPool'
+import { usePlacesNearby } from '../../../../components/Planner/usePlacesNearby'
+import { PlacesNearbyBanner, NearbyDistance } from '../../../../components/Planner/PlacesNearbyBanner'
 
 /**
  * Fullscreen places pool (mode === 'browse'): All/Unplanned/Tracks filter
@@ -79,9 +81,12 @@ export default function MPlacesBrowser({ planner, shell }: MPlacesBrowserProps) 
     [assignments, planner.tripAccommodations, planner.reservations],
   )
   const dayNumberByPlace = useMemo(() => firstPlannedDayNumbers(assignments, days), [assignments, days])
+  // "Near this place" (shared with the desktop column): the radius narrows the list and
+  // orders it by distance, over the other filters.
+  const { nearby, applyNearby, distanceOf, setNearbyRadius, closeNearby } = usePlacesNearby()
   const filtered = useMemo(() => {
-    return filterPool(poolPlaces, { filter, categoryFilters, ratingFilter, search, plannedIds })
-  }, [poolPlaces, filter, categoryFilters, ratingFilter, search, plannedIds])
+    return applyNearby(filterPool(poolPlaces, { filter, categoryFilters, ratingFilter, search, plannedIds }))
+  }, [poolPlaces, filter, categoryFilters, ratingFilter, search, plannedIds, applyNearby])
 
   // Compare the ids, not just the counts: a place removed remotely while another
   // one is selected keeps the sizes equal without the sets matching.
@@ -303,6 +308,11 @@ export default function MPlacesBrowser({ planner, shell }: MPlacesBrowserProps) 
           <span className="h-px flex-1 bg-[color:var(--m-rowbr)]" />
         </div>
 
+        {nearby && (
+          <div className="mb-2">
+            <PlacesNearbyBanner nearby={nearby} count={filtered.length} setNearbyRadius={setNearbyRadius} closeNearby={closeNearby} t={t} />
+          </div>
+        )}
         {/* ── Place list ── */}
         {filtered.length === 0 ? (
           filter === 'unplanned' && !search && categoryFilters.size === 0 && ratingFilter === 'all' ? (
@@ -313,7 +323,7 @@ export default function MPlacesBrowser({ planner, shell }: MPlacesBrowserProps) 
           ) : (
             <div className="flex min-h-[60vh] flex-col items-center justify-center px-8 py-10 text-center">
               <MDancingTrek scene="search" className="mb-2" />
-              <p className="font-geist text-[0.8125rem] font-medium text-m-muted">{t('places.noneFound')}</p>
+              <p className="font-geist text-[0.8125rem] font-medium text-m-muted">{t(nearby ? 'places.nearEmpty' : 'places.noneFound')}</p>
             </div>
           )
         ) : (
@@ -346,6 +356,7 @@ export default function MPlacesBrowser({ planner, shell }: MPlacesBrowserProps) 
                     )}
                   </div>
                 </button>
+                {!selectMode && nearby && distanceOf(place) != null && <NearbyDistance distanceM={distanceOf(place)!} t={t} />}
                 {!selectMode && dayNumber != null && (
                   <span className="flex-none whitespace-nowrap rounded-full border border-[color:var(--m-rowbr)] bg-[color:var(--m-ic)] px-[9px] py-1 font-geist text-[0.59375rem] font-bold uppercase tracking-[.05em] text-m-muted">
                     {t('planner.dayN', { n: dayNumber })}

@@ -11,6 +11,7 @@ import type { SidebarState } from './usePlacesSidebar'
 import { placesFilterTabs } from './usePlacesPool'
 import { PLACES_SORTS, type PlacesSort } from './placesSort'
 import { RATING_FLOORS, UNCATEGORIZED } from '../../utils/placesFilter'
+import { PlacesNearbyBanner } from './PlacesNearbyBanner'
 
 /**
  * Below this the two labels stop fitting side by side and both buttons fall back
@@ -102,6 +103,7 @@ export function PlacesHeader(S: SidebarState) {
         <SortDropdown {...S} />
       </div>
       <ActiveFilterChips {...S} />
+      <PlacesNearbyBanner nearby={S.nearby} count={S.filtered.length} setNearbyRadius={S.setNearbyRadius} closeNearby={S.closeNearby} t={S.t} />
     </div>
   )
 }

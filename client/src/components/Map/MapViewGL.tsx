@@ -52,10 +52,12 @@ import { addGpxTrackLayers, GPX_HIT_LAYER_ID, hasGpxTrackLayers, selectGpxTrack,
 import { buildPoiPopupHtml } from './placePopup'
 import { pluginsApi, type PluginMapMarker, type PluginMapLayer } from '../../api/client'
 import { PLUGIN_TONE_COLORS, buildPluginLayerData } from './pluginLayerGeo'
+import { buildPluginMarkerPopup, createPluginMarkerElement } from './pluginMarkerElements'
 import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/mapDefaults'
 import { alongShortestArc, computeMapViewport, TILE_SIZE_GL } from '../../utils/mapViewport'
 import { onRealWorld } from '../../utils/worldCopy'
 import { bindPoiDropTarget } from './poiDropTarget'
+import { syncNearbyCircle, type GLMapLike } from './nearbyCircleGL'
 import {
   PLACE_CLUSTER_CIRCLE_LAYER_ID, PLACE_CLUSTER_COUNT_LAYER_ID, PLACE_CLUSTER_SOURCE_ID,
   addPlaceClusterLayers, drawClusterBubbles, expandCluster,
@@ -295,44 +297,6 @@ function attachPin(map: any, gl: any, layer: HTMLElement | null, el: HTMLElement
     : libraryPin(new gl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map))
 }
 
-// Tone dot for a plugin marker — visual twin of MapPluginMarkers' divIcon.
-function createPluginMarkerElement(tone: PluginMapMarker['tone']): HTMLDivElement {
-  const color = PLUGIN_TONE_COLORS[tone] ?? PLUGIN_TONE_COLORS.default
-  const el = document.createElement('div')
-  el.style.cssText = 'width:16px;height:16px;cursor:pointer;'
-  el.innerHTML = `<span style="display:block;width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);box-sizing:border-box;"></span>`
-  return el
-}
-
-// Popup body for a plugin marker, built with textContent — the values are already
-// host-sanitized, but nothing plugin-supplied is ever handed to innerHTML anyway.
-function buildPluginMarkerPopup(mk: PluginMapMarker): HTMLDivElement {
-  const box = document.createElement('div')
-  box.style.cssText = 'min-width:120px;font-size:13px;'
-  if (mk.label) {
-    const t = document.createElement('div')
-    t.style.cssText = `font-weight:600;${mk.popupText ? 'margin-bottom:4px;' : ''}`
-    t.textContent = mk.label
-    box.appendChild(t)
-  }
-  if (mk.popupText) {
-    const p = document.createElement('div')
-    p.style.color = '#4b5563'
-    p.textContent = mk.popupText
-    box.appendChild(p)
-  }
-  if (mk.url) {
-    const a = document.createElement('a')
-    a.href = mk.url // http/https/mailto only — enforced server-side
-    a.target = '_blank'
-    a.rel = 'noreferrer noopener'
-    a.style.cssText = `display:inline-block;margin-top:6px;color:${PLUGIN_TONE_COLORS.default};`
-    a.textContent = mk.url
-    box.appendChild(a)
-  }
-  return box
-}
-
 // Small coloured pin for an OSM "explore" POI (matches the pill category colour).
 // A chain shows its logo instead of the category icon: on a corridor full of petrol
 // stations the brand is what the eye is looking for, and the server proxies it so the
@@ -388,6 +352,7 @@ export function MapViewGL({
   fitKey = 0,
   focusPoints,
   focusKey,
+  nearbyCircle,
   fitPadding,
   clusterLoosely = false,
   hazards,
@@ -485,6 +450,7 @@ export function MapViewGL({
   useTourMapLayersGL(mapReady ? readyMap : null, ferrataLayer, tourLayers)
   // Beneath the planned route's casing, the GL twin of the Leaflet pane order.
   useDawarichTrailGL(mapRef.current, mapReady, dawarichTrack, dawarichSelectedDate, 'trip-route-casing', dawarichHiddenDates)
+  useEffect(() => { if (mapReady && mapRef.current) syncNearbyCircle(mapRef.current as unknown as GLMapLike, nearbyCircle) }, [mapReady, nearbyCircle])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<Map<number, PlacePin>>(new Map())
   /** The count bubbles, one per cluster the source currently reports. */

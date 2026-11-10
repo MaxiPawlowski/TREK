@@ -20,6 +20,7 @@ export function PlacesList({ header, ...S }: SidebarState & {
     filtered, scrollContainerRef, onScrollTopChange, filter, t, canEditPlaces, onAddPlace,
     categories, selectedPlaceId, plannedIds, inDaySet, selectedIds, selectMode, selectedDayId,
     isMobile, onPlaceClick, openContextMenu, placeMenuItems, onAssignToDay, toggleSelected, setDayPickerPlace, registerPlaceRow, tripId,
+    distanceOf, nearby,
   } = S
   // Plugin-contributed columns/actions for the places view, keyed by place id (#plugins).
   const contribFor = usePluginViewContributions('places', tripId)
@@ -36,7 +37,7 @@ export function PlacesList({ header, ...S }: SidebarState & {
           size={92}
           fill
           surface="var(--bg-secondary)"
-          title={filter === 'unplanned' ? t('places.allPlanned') : t('places.noneFound')}
+          title={nearby ? t('places.nearEmpty') : filter === 'unplanned' ? t('places.allPlanned') : t('places.noneFound')}
           action={canEditPlaces ? (
             <button
               type="button"
@@ -72,6 +73,7 @@ export function PlacesList({ header, ...S }: SidebarState & {
                 toggleSelected={toggleSelected}
                 setDayPickerPlace={setDayPickerPlace}
                 registerPlaceRow={registerPlaceRow}
+                distanceM={distanceOf(place)}
               />
               {contributions.length > 0 && (
                 <div className="px-2.5 pb-2"><PluginCardFooter items={contributions} tripId={tripId} /></div>

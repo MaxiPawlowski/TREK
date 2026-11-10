@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import DawarichIcon from '../../../../components/shared/DawarichIcon'
 import {
   Bookmark, ChevronRight, ExternalLink, Map as MapIcon, Navigation, Paperclip,
-  Pencil, Phone, Plus, Route, RouteOff, Sparkles, Trash2, Upload, X,
+  Pencil, Phone, Plus, Radar, Route, RouteOff, Sparkles, Trash2, Upload, X,
 } from 'lucide-react'
 import MSheet from '../../../components/MSheet'
 import type { MTripSheetsProps } from '../MTripShell'
@@ -30,6 +30,7 @@ import type { Assignment, Day, Reservation, TripMember } from '../../../../types
 import PlacePhotoGallery from '../../../../components/Planner/PlacePhotoGallery'
 import { ActionCircle, Eyebrow, INNER_CLS } from './MTripSheetUi'
 import { FormSheetBody } from './PlSheetChrome'
+import { usePlacesNearby } from '../../../../components/Planner/usePlacesNearby'
 
 /**
  * Place inspector sheet (glass card), opened by the current place selection —
@@ -172,6 +173,17 @@ export default function MPlaceSheet({ planner, shell }: MTripSheetsProps) {
   const handleRate = async (rating: number | null) => {
     if (!place) return
     await actions.ratePlace(place.id, rating)
+  }
+
+  // "Near here": opens the radius around this place and shows it on the map, where the
+  // circle and the narrowed pins are; the places list follows the same radius.
+  const { openNearby } = usePlacesNearby()
+  const showNearby = () => {
+    if (!place) return
+    openNearby(place)
+    close()
+    if (shell.trTab !== 'plan') shell.setTrTab('plan')
+    if (shell.view !== 'map') shell.toggleView()
   }
 
   const showOnMap = () => {
@@ -565,6 +577,11 @@ export default function MPlaceSheet({ planner, shell }: MTripSheetsProps) {
               {place.lat != null && place.lng != null && (
                 <ActionCircle onClick={showOnMap} label={t('mobileTrip.showOnMap')}>
                   <MapIcon size={15} strokeWidth={2} />
+                </ActionCircle>
+              )}
+              {place.lat != null && place.lng != null && (
+                <ActionCircle onClick={showNearby} label={t('places.nearHere')}>
+                  <Radar size={15} strokeWidth={2} />
                 </ActionCircle>
               )}
               {safeHttpUrl(place.website) && (

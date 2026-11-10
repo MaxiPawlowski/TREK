@@ -816,7 +816,7 @@ describe('usePlacesSidebar row menu entries', () => {
     render(<Host {...makeProps({ places: [place], onAssignToDay })} />);
 
     const withDay = S.placeMenuItems(place, 4);
-    expect(withDay.map(e => e.divider ? '---' : e.label)).toEqual(['Edit', '+ Day', 'Open Website', 'Google Maps', 'Save to Collection', '---', 'Delete']);
+    expect(withDay.map(e => e.divider ? '---' : e.label)).toEqual(['Edit', '+ Day', 'Open Website', 'Google Maps', 'Near here', 'Save to Collection', '---', 'Delete']);
     withDay[1].onClick?.();
     expect(onAssignToDay).toHaveBeenCalledWith(3, 4);
 

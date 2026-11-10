@@ -13,6 +13,7 @@ import { RoadtripAlternativesBar } from './plannerLazy'
 import { LazyPanel } from './LazyPanel'
 import type { useTripPlanner } from './useTripPlanner'
 import type { useTripPlannerPage } from './useTripPlannerPage'
+import { useNearbyMapOverlay } from '../../components/Planner/useNearbyMapOverlay'
 
 type Planner = ReturnType<typeof useTripPlanner>
 type PageState = ReturnType<typeof useTripPlannerPage>
@@ -78,6 +79,8 @@ export function PlanMapStage({
   glMap, setGlMap, poiPillEnabled, mapPois, distanceUnit, inspectorHeight = 0,
 }: Readonly<PlanMapStageProps>): ReactElement {
   // ACT-02: a tour compared with its actual track lays the track into the day's lines, dotted.
+  // "Near this place": the circle, and the camera framing the whole radius while it is open.
+  const nearbyOverlay = useNearbyMapOverlay()
   const compared = useActivityCompareMap({
     enabled: !roadtripActive && !overviewActive && !isMobile,
     places, mapPlaces, route, routeWalking, selectedPlaceId,
@@ -145,7 +148,8 @@ export function PlanMapStage({
         onRouteClick={roadtripActive && can('day_edit', trip) ? addRoadtripVia : undefined}
         roadtripVias={roadtripActive ? roadtripVias.byDay : undefined}
         alternativeRoutes={alternativeOverlays}
-        focusPoints={overviewActive ? tripOverview.focusPoints : mapFocusPoints}
+        focusPoints={overviewActive ? tripOverview.focusPoints : nearbyOverlay?.focusPoints ?? mapFocusPoints}
+        nearbyCircle={roadtripActive || overviewActive ? null : nearbyOverlay?.circle}
         clusterLoosely={roadtripActive}
         activeAlternative={highlightedAlternative}
         onChooseAlternative={chooseRouteAlternative}

@@ -7,6 +7,7 @@ import type { Accommodation, Place } from '../../types'
 import { pendingStayPlaceIds } from '../../utils/pendingStays'
 import { matchesPlacesFilter } from '../../utils/placesFilter'
 import { plannedPlaceIds, plannedPlaceIdsForDay } from '../../utils/plannedPlaces'
+import { distanceFromAnchorM } from '../../utils/placesNearby'
 
 interface MapPlacesOptions {
   places: Place[]
@@ -39,6 +40,8 @@ export function useMapPlaces(options: MapPlacesOptions) {
   const placesFilter = useTripStore((s) => s.placesFilter)
   const placesCategoryFilter = useTripStore((s) => s.placesCategoryFilter)
   const placesRatingFilter = useTripStore((s) => s.placesRatingFilter)
+  // "Near this place" narrows the markers to the radius the list shows (the centre stays).
+  const placesNearby = useTripStore((s) => s.placesNearby)
 
   const [expandedDayIds, setExpandedDayIds] = useState<Set<number> | null>(null)
 
@@ -85,6 +88,10 @@ export function useMapPlaces(options: MapPlacesOptions) {
       // there the user asked to see the whole plan on the map, so a collapsed day
       // must not drop its planned places.
       if (placesFilter !== 'planned' && hiddenPlaceIds.has(p.id)) return false
+      if (placesNearby && p.id !== placesNearby.placeId) {
+        const d = distanceFromAnchorM(p, placesNearby)
+        if (d === null || d > placesNearby.radiusM) return false
+      }
       // Pool, categories and rating floor: the very matcher the lists use (#1541).
       return matchesPlacesFilter(p, filterState, { plannedIds })
     }).map(p => {
@@ -93,7 +100,7 @@ export function useMapPlaces(options: MapPlacesOptions) {
       const pending = pendingIds.has(p.id)
       return compact || pending ? { ...p, _compact: compact, _pending: pending } : p
     })
-  }, [places, placesCategoryFilter, placesFilter, placesRatingFilter, assignments, expandedDayIds, selectedDayId, days, tripAccommodations, reservations, compactUnplanned, hideTours, hiddenTourIds])
+  }, [places, placesCategoryFilter, placesFilter, placesRatingFilter, assignments, expandedDayIds, selectedDayId, days, tripAccommodations, reservations, compactUnplanned, hideTours, hiddenTourIds, placesNearby])
 
   // The "Tracks" pool is only offered while a place carries a track. When the last
   // one goes (deleted here or by a collaborator), fall back to "all". That happens here

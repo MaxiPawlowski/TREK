@@ -10,6 +10,7 @@ import { resolveTrackColor } from '../Map/trackColors'
 import { MoreButton, SoftPill, type MenuEntry } from './planParts'
 import type { Place, Category } from '../../types'
 import { startPlaceDrag } from '../Map/markerDrag'
+import { NearbyDistance } from './PlacesNearbyBanner'
 
 interface MemoPlaceRowProps {
   place: Place
@@ -31,12 +32,14 @@ interface MemoPlaceRowProps {
   toggleSelected: (id: number) => void
   setDayPickerPlace: (place: any) => void
   registerPlaceRow: (placeId: number, element: HTMLDivElement | null) => void
+  /** Metres from the "near this place" centre while that is on; null otherwise. */
+  distanceM?: number | null
 }
 
 export const MemoPlaceRow = React.memo(function MemoPlaceRow({
   place, category: cat, isSelected, inDay, isChecked,
   selectMode, selectedDayId, isMobile, t,
-  onPlaceClick, onContextMenu, menuItems, onAssignToDay, toggleSelected, setDayPickerPlace, registerPlaceRow,
+  onPlaceClick, onContextMenu, menuItems, onAssignToDay, toggleSelected, setDayPickerPlace, registerPlaceRow, distanceM,
 }: MemoPlaceRowProps) {
   const nameId = useId()
   const hasGeometry = Boolean(place.route_geometry)
@@ -132,6 +135,7 @@ export const MemoPlaceRow = React.memo(function MemoPlaceRow({
           </div>
         )}
       </div>
+      {distanceM != null && <NearbyDistance distanceM={distanceM} t={t} />}
       {(showAddToDay || showMore) && (
         // The row selects on click; the buttons and the menu they open act on their own.
         <div role="presentation" className="flex flex-none items-center gap-0.5" onClick={e => e.stopPropagation()}>

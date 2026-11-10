@@ -3,7 +3,7 @@ import { placeLocality } from '../../utils/placeLocality'
 import { localityGroups, matchesLocality, type LocalityFilter } from './placeLocalityFilter'
 import { readPlacesSort, sortPlaces, writePlacesSort, type PlacesSort } from './placesSort'
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
-import { Pencil, Trash2, ExternalLink, Navigation, CalendarDays, Bookmark } from 'lucide-react'
+import { Pencil, Trash2, ExternalLink, Navigation, CalendarDays, Bookmark, Radar } from 'lucide-react'
 import { useTranslation } from '../../i18n'
 import { useToast } from '../shared/Toast'
 import { useContextMenu } from '../shared/ContextMenu'
@@ -23,6 +23,8 @@ import type { MenuEntry } from './planParts'
 import { useListImport, type ListImportProvider } from './useListImport'
 import { usePlacesPool, type PlacesFilter } from './usePlacesPool'
 import { usePlacesColumnFileImport } from './usePlacesColumnFileImport'
+import { usePlacesNearby } from './usePlacesNearby'
+import { hasCoords } from '../../utils/placesNearby'
 
 /** Stable identity — a fresh [] default would invalidate the planned memo on every render. */
 const NO_ACCOMMODATIONS: PlannedAccommodation[] = []
@@ -156,6 +158,10 @@ export function usePlacesSidebar(props: PlacesSidebarProps) {
   // The list's order (#2093), remembered on this device.
   const [placesSort, setPlacesSortState] = useState<PlacesSort>(readPlacesSort)
   const setPlacesSort = useCallback((sort: PlacesSort) => { setPlacesSortState(sort); writePlacesSort(sort) }, [])
+  // "Near this place": while on, the list narrows to the radius and orders by distance,
+  // over whatever the other filters leave.
+  const nearbyState = usePlacesNearby()
+  const { applyNearby, nearby } = nearbyState
   // Country, or country and region, from each place's resolved position (#2537). List-only,
   // like the rating floor.
   const [localityFilter, setLocalityFilter] = useState<LocalityFilter | null>(null)
@@ -202,8 +208,8 @@ export function usePlacesSidebar(props: PlacesSidebarProps) {
       if (localityFilter && !matchesLocality(localityOf.get(p.id), localityFilter)) return false
       return true
     })
-    return sortPlaces(list, placesSort, language)
-  }, [poolPlaces, filter, categoryFilters, search, plannedIds, plannedFilterIds, ratingFilter, localityFilter, localityOf, placesSort, language])
+    return nearby ? applyNearby(list) : sortPlaces(list, placesSort, language)
+  }, [poolPlaces, filter, categoryFilters, search, plannedIds, plannedFilterIds, ratingFilter, localityFilter, localityOf, placesSort, language, nearby, applyNearby])
 
   /**
    * How many places each "show" choice would leave, under the category and search
@@ -264,6 +270,7 @@ export function usePlacesSidebar(props: PlacesSidebarProps) {
   }, [assignments, storedDayAssignments, selectedDayId])
 
   const isAssignedToSelectedDay = (placeId) => inDaySet.has(placeId)
+  const { openNearby } = nearbyState
 
   /**
    * A row's actions, one list for both ways in: the right-click menu and the row's
@@ -277,13 +284,14 @@ export function usePlacesSidebar(props: PlacesSidebarProps) {
       !!dayId && { label: t('planner.addToDay'), icon: CalendarDays, onClick: () => onAssignToDay(place.id, dayId) },
       !!website && { label: t('inspector.website'), icon: ExternalLink, onClick: () => window.open(website, '_blank', 'noopener,noreferrer') },
       !!googleMapsUrl && { label: t('inspector.google'), icon: Navigation, onClick: () => window.open(googleMapsUrl, '_blank') },
+      hasCoords(place) && { label: t('places.nearHere'), icon: Radar, onClick: () => openNearby(place) },
       collectionsEnabled && { label: t('inspector.saveToCollection'), icon: Bookmark, onClick: () => useSaveToCollectionStore.getState().open(placeToSaveTarget(place)) },
       ...ai.place(place),
       { divider: true },
       canEditPlaces && { label: t('common.delete'), icon: Trash2, danger: true, onClick: () => onDeletePlace(place.id) },
     ]
     return entries.filter((entry): entry is MenuEntry => entry !== false)
-  }, [canEditPlaces, collectionsEnabled, t, onEditPlace, onAssignToDay, onDeletePlace, ai])
+  }, [canEditPlaces, collectionsEnabled, t, onEditPlace, onAssignToDay, onDeletePlace, ai, openNearby])
 
   // The day is read when the menu opens, so it stays stable across day switches.
   const openCtxMenu = ctxMenu.open
@@ -318,6 +326,7 @@ export function usePlacesSidebar(props: PlacesSidebarProps) {
     mobileShowDays, setMobileShowDays,
     hasTracks, plannedIds, plannedFilterIds, dayScoped, filtered, registerPlaceRow, isAssignedToSelectedDay, inDaySet,
     openContextMenu, placeMenuItems,
+    ...nearbyState,
   }
 }
 

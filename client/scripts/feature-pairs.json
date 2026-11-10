@@ -630,6 +630,15 @@
       ]
     },
     {
+      "feature": "Places nearby",
+      "hooks": ["src/components/Planner/usePlacesNearby.ts"],
+      "desktop": ["src/components/Planner/usePlacesSidebar.ts", "src/components/Planner/PlacesNearbyBanner.tsx"],
+      "mobile": [
+        "src/mobile/screens/trip/places/MPlacesBrowser.tsx",
+        "src/mobile/screens/trip/sheets/MPlaceSheet.tsx"
+      ]
+    },
+    {
       "feature": "Plugins admin",
       "hooks": [
         "src/components/Admin/plugins/pluginModel.ts",

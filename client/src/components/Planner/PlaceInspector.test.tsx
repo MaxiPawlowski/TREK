@@ -1216,7 +1216,7 @@ describe('PlaceInspector', () => {
     render(<PlaceInspector {...defaultProps} place={p} selectedDayId={1} assignments={{ '1': [] }} />);
     const footer = document.querySelector('footer') as HTMLElement;
     const names = within(footer).getAllByRole('button').map(b => b.getAttribute('aria-label') || b.textContent);
-    expect(names).toEqual(['Add to Day', 'Navigation', 'Open Website', 'Delete', 'Edit']);
+    expect(names).toEqual(['Add to Day', 'Navigation', 'Open Website', 'Near here', 'Delete', 'Edit']);
     // Hover looks are classes on the tokens now, not inline styles swapped by handlers.
     const edit = within(footer).getByRole('button', { name: 'Edit' });
     expect(edit.getAttribute('style') ?? '').not.toMatch(/background/);

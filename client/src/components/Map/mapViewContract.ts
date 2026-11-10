@@ -40,7 +40,16 @@ export interface RouteSegment {
   drivingText?: string;
 }
 
+/** The "near this place" radius both renderers draw: centre and radius in metres. */
+export interface NearbyCircle {
+  lat: number;
+  lng: number;
+  radiusM: number;
+}
+
 export interface MapViewProps {
+  /** The "near this place" radius, drawn as a circle under the markers; null or absent while off. */
+  nearbyCircle?: NearbyCircle | null;
   places?: Place[];
   dayPlaces?: Place[];
   // Enables the plugin map contributions (markers + layers). Absent on surfaces

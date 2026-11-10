@@ -37,6 +37,7 @@ import type { BudgetSlice } from './slices/budgetSlice'
 import type { ReservationsSlice } from './slices/reservationsSlice'
 import type { FilesSlice } from './slices/filesSlice'
 import type { PlacesRatingFloor } from '../utils/placesFilter'
+import type { PlacesNearbyAnchor } from '../utils/placesNearby'
 
 /** The part of the world the trip's plan map shows, as its last move left it. */
 export interface PlanMapViewport {
@@ -88,6 +89,9 @@ export interface TripStoreState
   // Where the plan map is looking, so the place search can look there too
   // (#2620). Null while no plan map is on screen.
   planMapViewport: PlanMapViewport | null
+  // "Near this place": the anchor and radius the places list and the plan map
+  // narrow to. Shared for the same reason as the filters above. Null while off.
+  placesNearby: PlacesNearbyAnchor | null
   isLoading: boolean
   error: string | null
   /**
@@ -102,6 +106,7 @@ export interface TripStoreState
   setPlacesCategoryFilter: (categoryIds: Set<string>) => void
   setPlacesRatingFilter: (floor: PlacesRatingFloor) => void
   setPlanMapViewport: (viewport: PlanMapViewport | null) => void
+  setPlacesNearby: (anchor: PlacesNearbyAnchor | null) => void
   /** Lifts the pool, category and rating filters at once. */
   resetPlacesFilters: () => void
   handleRemoteEvent: (event: WebSocketEvent) => void
@@ -137,6 +142,7 @@ export const useTripStore = create<TripStoreState>((set, get) => ({
   placesCategoryFilter: new Set<string>(),
   placesRatingFilter: 'all',
   planMapViewport: null,
+  placesNearby: null,
   isLoading: false,
   error: null,
   tripGone: null,
@@ -146,6 +152,7 @@ export const useTripStore = create<TripStoreState>((set, get) => ({
   setPlacesCategoryFilter: (categoryIds: Set<string>) => set({ placesCategoryFilter: categoryIds }),
   setPlacesRatingFilter: (floor: PlacesRatingFloor) => set({ placesRatingFilter: floor }),
   setPlanMapViewport: (viewport: PlanMapViewport | null) => set({ planMapViewport: viewport }),
+  setPlacesNearby: (anchor: PlacesNearbyAnchor | null) => set({ placesNearby: anchor }),
   resetPlacesFilters: () => set({ placesFilter: 'all', placesCategoryFilter: new Set<string>(), placesRatingFilter: 'all' }),
 
   handleRemoteEvent: (event: WebSocketEvent) => handleRemoteEvent(set, get, event),
@@ -169,6 +176,7 @@ export const useTripStore = create<TripStoreState>((set, get) => ({
     placesCategoryFilter: new Set<string>(),
     placesRatingFilter: 'all',
     planMapViewport: null,
+    placesNearby: null,
     error: null,
     tripGone: null,
   }),
