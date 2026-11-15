@@ -5,6 +5,7 @@
   "components/Studio/inspector/FocalPad.tsx": 1,
   "mobile/components/trek3d/MascotClip.tsx": 1,
   "mobile/screens/trip/MTripShell.tsx": 1,
+  "mobile/screens/trip/map/MMapArea.tsx": 2,
   "mobile/screens/vacay/MVacay.tsx": 1,
   "pages/tripPlanner/PlanMapStage.tsx": 4
 }

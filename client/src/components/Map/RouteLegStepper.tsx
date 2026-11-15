@@ -71,8 +71,11 @@ export function RouteLegCard({ focus, maxWidth = 360 }: { focus: RouteLegFocus; 
         <div className="font-semibold uppercase tracking-wide text-accent" style={fsc(11)} role="status">
           {t('map.legs.counter', { n: index + 1, total: legs.length })}
         </div>
+        <div className="truncate leading-snug text-content-muted" style={fsc(12, 'body')}>
+          {fromName}
+        </div>
         <div className="truncate font-semibold leading-snug" style={fsc(13, 'body')}>
-          {fromName} <span className="text-content-muted">→</span> {toName}
+          <span className="text-content-muted">→</span> {toName}
         </div>
         <div className="flex items-center gap-1 tabular-nums text-content-muted" style={fsc(12)}>
           <ModeIcon size={13} strokeWidth={2.2} aria-hidden />

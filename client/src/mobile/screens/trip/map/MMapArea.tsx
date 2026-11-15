@@ -102,6 +102,24 @@ function alternativesFitPadding(insets: SafeInsets): ViewportPadding {
   }
 }
 
+/**
+ * Where a single leg of the day is framed: between the POI bar and the leg card.
+ *
+ * Top: the safe area, `--m-safe-top`'s 12px, the bar's 96px offset under it and its
+ * 52px (42px segments in a padded bar), then a 12px gap. Bottom: the safe area, the
+ * dock's 74px, the right column's 62px lift, the two round pills under the card
+ * (2 x 44px and their gaps) and the card itself with a gap above it. The right side
+ * keeps clear of that column of round controls, the left of the compass.
+ */
+function legFitPadding(insets: SafeInsets): ViewportPadding {
+  return {
+    top: insets.top + 12 + 96 + 52 + 12,
+    right: 64, // rtl-lint-disable -- screen geometry handed to the map engine
+    bottom: insets.bottom + 74 + 62 + 2 * 44 + 2 * 8 + 76 + 12,
+    left: 40, // rtl-lint-disable -- screen geometry handed to the map engine
+  }
+}
+
 type FocusPoints = readonly [number, number][]
 
 /** A camera focus the planner is holding, and the day that was on screen when it arrived. */
@@ -273,9 +291,10 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
   const insetProbe = useRef<HTMLSpanElement>(null)
   const insets = useSafeInsets(insetProbe)
   const framingOffers = onStage && planner.alternativeOverlays.length > 0
+  const framingLeg = !framingOffers && legFocus.overlay != null
   const fitPadding = useMemo(
-    () => (framingOffers ? alternativesFitPadding(insets) : undefined),
-    [framingOffers, insets],
+    () => (framingOffers ? alternativesFitPadding(insets) : framingLeg ? legFitPadding(insets) : undefined),
+    [framingOffers, framingLeg, insets],
   )
 
   /**
