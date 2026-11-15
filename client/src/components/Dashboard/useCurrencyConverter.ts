@@ -14,8 +14,8 @@ import { CURRENCIES } from '../Budget/BudgetPanel.constants';
 export function useCurrencyConverter() {
   const isLoaded = useSettingsStore((s) => s.isLoaded);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
-  const from = useSettingsStore((s) => s.settings.dashboard_fx_from) || 'EUR';
-  const to = useSettingsStore((s) => s.settings.dashboard_fx_to) || 'USD';
+  const from = useSettingsStore((s) => s.settings.dashboard_fx_from) || 'JPY';
+  const to = useSettingsStore((s) => s.settings.dashboard_fx_to) || 'EUR';
   const setFrom = (v: string) => {
     updateSetting('dashboard_fx_from', v).catch(() => {});
   };
