@@ -142,5 +142,9 @@ const trip: TranslationStrings = {
   'trip.journal.linked': 'Journal linked',
   'trip.journal.membersSaved': 'Access saved',
   'trip.journal.unlinked': 'Journal unlinked',
+  'trip.tabs.short.plan': 'Plan',
+  'trip.tabs.short.roadtrip': 'Route',
+  'trip.tabs.short.transports': 'Transport',
+  'trip.tabs.short.costs': 'Costs',
 };
 export default trip;

@@ -146,11 +146,11 @@ describe('PoiCategoryPill', () => {
     }
   })
 
-  it('FE-COMP-POIPILL-013b: in the phone chrome the bar wears the day rail glass at its 36px height', () => {
+  it('FE-COMP-POIPILL-013b: in the phone chrome the bar wears the day rail glass, each segment tall enough for its word', () => {
     pill({ categories: WITH_PLUGINS, fullWidth: true, phoneChrome: true })
     for (const button of screen.getAllByRole('button')) {
       expect(button.style.minWidth).toBe('34px')
-      expect(button.style.height).toBe('28px')
+      expect(button.style.height).toBe('42px')
     }
     const bar = screen.getAllByRole('button')[0].closest('[style*="overflow"]') as HTMLElement
     expect(bar.style.padding).toBe('3px')

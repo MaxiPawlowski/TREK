@@ -26,7 +26,25 @@ interface Props {
 // The touch target every segment keeps, however many categories there are.
 const SEGMENT = 34
 // On the phone the segment is as tall as a day chip; it keeps its width.
-const PHONE_SEGMENT_HEIGHT = 28
+const PHONE_SEGMENT_HEIGHT = 42
+
+/**
+ * The word under each icon on the phone, where there is no hover to show a tooltip.
+ * Short forms: the full names ("Bars and nightlife") do not fit an eighth of a phone.
+ */
+function shortWord(key: string, t: (k: string) => string): string | null {
+  switch (key) {
+    case 'restaurant': return t('poi.cat.short.restaurants')
+    case 'cafe': return t('poi.cat.short.cafes')
+    case 'bar': return t('poi.cat.short.bars')
+    case 'hotel': return t('poi.cat.short.hotels')
+    case 'sights': return t('poi.cat.short.sights')
+    case 'museum': return t('poi.cat.short.museums')
+    case 'nature': return t('poi.cat.short.nature')
+    case 'activity': return t('poi.cat.short.activities')
+    default: return null
+  }
+}
 
 /** The phone shell's glass, as the day rail draws it (bg/border --m-glass/--m-gbr). */
 const PHONE_GLASS: React.CSSProperties = {
@@ -68,6 +86,8 @@ interface SegmentProps {
 }
 
 function Segment({ cat, on, loading, failed, fullWidth, phoneChrome, onToggle }: Readonly<SegmentProps>) {
+  const { t } = useTranslation()
+  const word = shortWord(cat.key, t) ?? cat.label
   return (
     <Tooltip label={cat.label} placement="bottom">
       <button
@@ -79,13 +99,14 @@ function Segment({ cat, on, loading, failed, fullWidth, phoneChrome, onToggle }:
         style={{
           position: 'relative',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          flexDirection: phoneChrome ? 'column' : undefined, gap: phoneChrome ? 2 : undefined,
           flexGrow: fullWidth ? 1 : undefined,
           // Spread on the phone, fixed on desktop, and never narrower than the touch
           // target either way: past that the bar scrolls instead of squeezing.
           flexShrink: fullWidth ? 1 : 0,
           flexBasis: fullWidth ? 0 : undefined,
           minWidth: SEGMENT,
-          width: fullWidth ? 'auto' : SEGMENT, height: phoneChrome ? PHONE_SEGMENT_HEIGHT : SEGMENT, borderRadius: 999, border: 'none', cursor: 'pointer',
+          width: fullWidth ? 'auto' : SEGMENT, height: phoneChrome ? PHONE_SEGMENT_HEIGHT : SEGMENT, borderRadius: phoneChrome ? 14 : 999, border: 'none', cursor: 'pointer',
           background: on ? cat.color : 'transparent',
           color: on ? '#fff' : undefined,
           transition: 'background 0.14s, color 0.14s',
@@ -104,6 +125,11 @@ function Segment({ cat, on, loading, failed, fullWidth, phoneChrome, onToggle }:
           />
         ) : (
           <cat.Icon size={16} strokeWidth={2} />
+        )}
+        {phoneChrome && (
+          <span style={{ fontSize: 'calc(9.5px * var(--fs-scale-caption, 1))', fontWeight: 600, lineHeight: 1, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 2px' }}>
+            {word}
+          </span>
         )}
         {on && !loading && failed && (
           <span style={{
@@ -157,7 +183,7 @@ export default function PoiCategoryPill({ categories, active, onToggle, loadingK
       <div onWheel={wheelSideways} style={{
         display: fullWidth ? 'flex' : 'inline-flex',
         alignSelf: fullWidth ? 'stretch' : undefined,
-        alignItems: 'center', gap: 2, padding: phoneChrome ? 3 : 4, borderRadius: 999, pointerEvents: 'auto', ...frosted,
+        alignItems: 'center', gap: 2, padding: phoneChrome ? 3 : 4, borderRadius: phoneChrome ? 18 : 999, pointerEvents: 'auto', ...frosted,
         maxWidth: '100%', overflowX: 'auto', scrollbarWidth: 'none',
       }}>
         {categories.core.map(segment)}

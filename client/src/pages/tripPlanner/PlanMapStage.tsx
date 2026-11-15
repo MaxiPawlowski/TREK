@@ -14,6 +14,8 @@ import { LazyPanel } from './LazyPanel'
 import type { useTripPlanner } from './useTripPlanner'
 import type { useTripPlannerPage } from './useTripPlannerPage'
 import { useNearbyMapOverlay } from '../../components/Planner/useNearbyMapOverlay'
+import { useRouteLegFocus } from '../../components/Map/useRouteLegFocus'
+import { RouteLegCard, RouteLegsPill } from '../../components/Map/RouteLegStepper'
 
 type Planner = ReturnType<typeof useTripPlanner>
 type PageState = ReturnType<typeof useTripPlannerPage>
@@ -81,6 +83,7 @@ export function PlanMapStage({
   // ACT-02: a tour compared with its actual track lays the track into the day's lines, dotted.
   // "Near this place": the circle, and the camera framing the whole radius while it is open.
   const nearbyOverlay = useNearbyMapOverlay()
+  const legFocus = useRouteLegFocus({ route, segments: routeSegments, dayId: selectedDayId, enabled: !roadtripActive && !overviewActive })
   const compared = useActivityCompareMap({
     enabled: !roadtripActive && !overviewActive && !isMobile,
     places, mapPlaces, route, routeWalking, selectedPlaceId,
@@ -148,7 +151,8 @@ export function PlanMapStage({
         onRouteClick={roadtripActive && can('day_edit', trip) ? addRoadtripVia : undefined}
         roadtripVias={roadtripActive ? roadtripVias.byDay : undefined}
         alternativeRoutes={alternativeOverlays}
-        focusPoints={overviewActive ? tripOverview.focusPoints : nearbyOverlay?.focusPoints ?? mapFocusPoints}
+        focusPoints={overviewActive ? tripOverview.focusPoints : legFocus.overlay?.focusPoints ?? nearbyOverlay?.focusPoints ?? mapFocusPoints}
+        routeFocus={roadtripActive || overviewActive ? null : legFocus.overlay?.coords ?? null}
         nearbyCircle={roadtripActive || overviewActive ? null : nearbyOverlay?.circle}
         clusterLoosely={roadtripActive}
         activeAlternative={highlightedAlternative}
@@ -197,6 +201,8 @@ export function PlanMapStage({
               onSelectDay={handleSelectDay}
             />
           )}
+          <RouteLegCard focus={legFocus} />
+          {!roadtripActive && <RouteLegsPill focus={legFocus} />}
           {!roadtripActive && (
             <TripRouteOverviewPill active={overviewShown} onToggle={toggleOverview} />
           )}

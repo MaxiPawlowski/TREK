@@ -7,7 +7,7 @@
   "src/components/Budget/CostsPanel.tsx": 1798,
   "src/components/Map/MapView.tsx": 1129,
   "src/components/Map/MapViewGL.test.tsx": 2919,
-  "src/components/Map/MapViewGL.tsx": 2092,
+  "src/components/Map/MapViewGL.tsx": 2091,
   "src/components/Planner/DayDetailPanel.test.tsx": 2333,
   "src/components/Planner/DayPlanSidebar.test.tsx": 5349,
   "src/components/Planner/DayPlanSidebar.tsx": 2929,

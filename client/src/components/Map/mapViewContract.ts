@@ -50,6 +50,8 @@ export interface NearbyCircle {
 export interface MapViewProps {
   /** The "near this place" radius, drawn as a circle under the markers; null or absent while off. */
   nearbyCircle?: NearbyCircle | null;
+  /** One leg of the day lit over the route ("leg by leg"), `[lat, lng]` points; null while the whole day shows. */
+  routeFocus?: [number, number][] | null;
   places?: Place[];
   dayPlaces?: Place[];
   // Enables the plugin map contributions (markers + layers). Absent on surfaces

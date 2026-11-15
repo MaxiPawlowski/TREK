@@ -417,7 +417,7 @@ import { SelectionController } from './SelectionController'
 import { LngFrameProvider, useLngFrame, useTripLngFrame } from './lngFrameContext'
 import { frameLine, frameLng } from '../../utils/lngFrame'
 import { LngFrameFollower, MapClickHandler, MapContextMenuHandler, PoiDropTarget, ViewportController } from './leafletMapBridges'
-import { NearbyCircleLeaflet } from './NearbyCircleLeaflet'
+import { NearbyCircleLeaflet, RouteFocusLeaflet } from './NearbyCircleLeaflet'
 
 /**
  * Make a place pin a drag source without losing its clicks to an old pan.
@@ -563,7 +563,7 @@ export const MapView = memo(function MapView({
   onRemoveVia,
   alternativeRoutes,
   focusPoints,
-  nearbyCircle,
+  nearbyCircle, routeFocus,
   fitPadding,
   clusterLoosely = false,
   activeAlternative,
@@ -874,7 +874,7 @@ export const MapView = memo(function MapView({
       {hasViewBaseLayer && <MapCameraSnapshot onChange={saveCameraSnapshot} />}
       <BoundsController places={dayPlaces.length > 0 ? dayPlaces : places} routeCoords={dayPlaces.length > 0 ? routeCoords : []} fitKey={fitKey} paddingOpts={paddingOpts} framedOnMount={initialView.framed} focusPoints={focusPoints} focusKey={focusKey} fitPadding={fitPadding} follow={followSelection} />
       <SelectionController follow={followSelection} places={places} selectedPlaceId={selectedPlaceId} dayPlaces={dayPlaces} selectedPlace={selectedPlace} paddingBox={paddingBox} />
-      <NearbyCircleLeaflet circle={nearbyCircle} />
+      <NearbyCircleLeaflet circle={nearbyCircle} /><RouteFocusLeaflet coords={routeFocus} />
       <MapClickHandler onClick={onMapClick} />
       <MapContextMenuHandler onContextMenu={onMapContextMenu} />
       <CameraHoverGuard movingRef={mapMovingRef} onMoveStart={clearHover} onZoom={setMapZoom} />

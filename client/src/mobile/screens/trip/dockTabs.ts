@@ -43,3 +43,20 @@ export function pickDockTabs(enabledTabIds: ReadonlySet<string>): { id: string; 
 export function dockTabIds(enabledTabIds: ReadonlySet<string>): Set<string> {
   return new Set(pickDockTabs(enabledTabIds).map(tab => tab.id))
 }
+
+/**
+ * The word under each dock icon. Short on purpose: a seat is about 52px wide, so the
+ * full tab names ("Transports", "Reservations") would not fit under a circle. Null for
+ * a tab without a short form, which then shows its own label.
+ */
+export function dockWord(id: string, t: (key: string) => string): string | null {
+  switch (id) {
+    case 'plan': return t('trip.tabs.short.plan')
+    case 'roadtrip': return t('trip.tabs.short.roadtrip')
+    case 'transports': return t('trip.tabs.short.transports')
+    case 'buchungen': return t('trip.tabs.reservationsShort')
+    case 'finanzplan': return t('trip.tabs.short.costs')
+    case 'listen': return t('trip.tabs.listsShort')
+    default: return null
+  }
+}

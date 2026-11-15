@@ -1,4 +1,4 @@
-import { FolderSync, List, MoreHorizontal, Plus, Rows3 } from 'lucide-react';
+import { FolderSync, List, MoreHorizontal, Plus, Rows3, type LucideIcon } from 'lucide-react';
 import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { canManageDocSync } from '../../../components/Files/docsync/useDocSync';
 import { useDocSyncOffered } from '../../../components/Files/docsync/useDocSyncOffered';
@@ -247,13 +247,57 @@ export function DockMoreButton({
       aria-label={label}
       aria-expanded={open}
       aria-current={!open && standsFor ? 'page' : undefined}
-      className={`flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full ${
-        open || standsFor
-          ? 'bg-[color:var(--m-ic)] text-m-ink ring-[1.5px] ring-inset ring-[color:var(--m-act)]'
-          : 'text-m-muted'
-      }`}
+      className={dockSeatClass(open || standsFor)}
     >
-      <MoreHorizontal size={19} strokeWidth={2.2} />
+      <span
+        className={`${dockIconClass} ${
+          open || standsFor
+            ? 'bg-[color:var(--m-ic)] text-m-ink ring-[1.5px] ring-inset ring-[color:var(--m-act)]'
+            : 'text-m-muted'
+        }`}
+      >
+        <MoreHorizontal size={19} strokeWidth={2.2} />
+      </span>
+      <span className={dockWordClass}>{label}</span>
+    </button>
+  );
+}
+
+/** A dock seat: the icon in its pill with a short word under it, about 52px wide. */
+const dockSeatClass = (on: boolean) =>
+  `flex h-[56px] w-[52px] flex-none flex-col items-center justify-center gap-[3px] ${on ? 'text-m-ink' : 'text-m-muted'}`;
+const dockIconClass = 'flex h-[30px] w-[46px] items-center justify-center rounded-full';
+const dockWordClass = 'max-w-full truncate font-semibold leading-none [font-size:calc(10px*var(--fs-scale-caption,1))]';
+
+/**
+ * One section in the phone dock. Labelled under the icon: a train, a ticket and a
+ * box read as guesses on their own, and the dock is where a trip is steered from.
+ */
+export function DockTabButton({
+  icon: Icon,
+  label,
+  word,
+  active,
+  onSelect,
+}: {
+  icon: LucideIcon;
+  label: string;
+  word: string;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-label={label}
+      aria-current={active ? 'page' : undefined}
+      className={dockSeatClass(active)}
+    >
+      <span className={`${dockIconClass} ${active ? 'bg-m-act text-m-actfg' : ''}`}>
+        <Icon size={19} strokeWidth={2} />
+      </span>
+      <span className={dockWordClass}>{word}</span>
     </button>
   );
 }

@@ -5,7 +5,7 @@ import {
   CalendarDays, ChevronDown, ChevronLeft, Download, FileDown, List, Map as MapIcon, PanelLeftClose, PanelLeftOpen, Plane, Route, SlidersHorizontal, Trash2, Upload,
 } from 'lucide-react'
 import { useTripPlanner } from '../../../pages/tripPlanner/useTripPlanner'
-import { pickDockTabs } from './dockTabs'
+import { dockWord, pickDockTabs } from './dockTabs'
 import MBadge from '../../components/MBadge'
 import MIconBtn from '../../components/MIconBtn'
 import { useActivePill } from '../../components/useActivePill'
@@ -29,7 +29,7 @@ import { useDayPreviewStore } from '../../dayPreviewStore'
 import { useIsSplit, useIsWide } from '../../../hooks/sizeClass'
 import MTripRail from './MTripRail'
 import {
-  CollabSegment, CompactToggle, DockMoreButton, DocSyncButton, GlassSegment, HeaderActions, PrimaryPill, ROW_AFTER_BACK, ROW_CENTRED,
+  CollabSegment, CompactToggle, DockMoreButton, DockTabButton, DocSyncButton, GlassSegment, HeaderActions, PrimaryPill, ROW_AFTER_BACK, ROW_CENTRED,
 } from './MTripShellParts'
 import { edgeFadeClass, useEdgeFade } from '../../components/useEdgeFade'
 import { useShortcuts } from '../../keyboard/useShortcuts'
@@ -916,24 +916,11 @@ export default function MTripShell({
       {/* A tab's list fades out under the dock rather than showing in the gap below it; a map runs to the edge. */}
       {!wide && !MAP_TABS.has(trTab) && <MDockScrim />}
       {!wide && <nav className="absolute inset-x-4 z-40 flex h-[62px] items-center justify-around rounded-[31px] border border-[color:var(--m-gbr)] bg-[color:var(--m-dock)] px-[14px] shadow-[0_16px_44px_-14px_rgba(0,0,0,.35)] backdrop-blur-[30px] backdrop-saturate-[1.4] bottom-[calc(env(safe-area-inset-bottom,0px)+12px)]">
-        {dockTabs.map(({ id, icon: Icon }) => {
-          // While More is open the dock points at More, not at the tab under it.
-          const active = trTab === id && sheet?.id !== 'mehr'
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTrTab(id)}
-              aria-label={tabLabel(id)}
-              aria-current={active ? 'page' : undefined}
-              className={`flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full ${
-                active ? 'bg-m-act text-m-actfg' : 'text-m-muted'
-              }`}
-            >
-              <Icon size={19} strokeWidth={2} />
-            </button>
-          )
-        })}
+        {/* While More is open the dock points at More, not at the tab under it. */}
+        {dockTabs.map(({ id, icon }) => (
+          <DockTabButton key={id} icon={icon} label={tabLabel(id)} active={trTab === id && sheet?.id !== 'mehr'} onSelect={() => setTrTab(id)}
+            word={dockWord(id, t) ?? tabLabel(id)} />
+        ))}
         <DockMoreButton
           open={sheet?.id === 'mehr'}
           standsFor={!dockTabs.some(tab => tab.id === trTab)}

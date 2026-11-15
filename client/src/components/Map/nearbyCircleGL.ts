@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { NearbyCircle } from './mapViewContract';
 
 /**
@@ -94,4 +95,115 @@ export function syncNearbyCircle(map: GLMapLike, circle: NearbyCircle | null | u
   } catch {
     /* the style is mid-swap; style.load redraws it */
   }
+}
+
+// ── One leg of the day ("leg by leg") ─────────────────────────────────────────
+const LEG_SOURCE = 'trek-route-focus';
+const LEG_CASING = 'trek-route-focus-casing';
+const LEG_LINE = 'trek-route-focus-line';
+const LEG_ENDS = 'trek-route-focus-ends';
+const latestLeg = new WeakMap<GLMapLike, [number, number][] | null>();
+const listeningLeg = new WeakSet<GLMapLike>();
+
+/** The theme's warning tone (amber), which stands out against the blue day route. */
+function legColor(): string {
+  if (typeof document === 'undefined') return '#d97706';
+  return getComputedStyle(document.documentElement).getPropertyValue('--warning').trim() || '#d97706';
+}
+
+function legData(coords: [number, number][] | null) {
+  if (!coords || coords.length < 2) return { type: 'FeatureCollection', features: [] };
+  const line = coords.map(([lat, lng]) => [lng, lat]);
+  return {
+    type: 'FeatureCollection',
+    features: [
+      { type: 'Feature', properties: { kind: 'line' }, geometry: { type: 'LineString', coordinates: line } },
+      { type: 'Feature', properties: { kind: 'start' }, geometry: { type: 'Point', coordinates: line[0] } },
+      { type: 'Feature', properties: { kind: 'end' }, geometry: { type: 'Point', coordinates: line[line.length - 1] } },
+    ],
+  };
+}
+
+function applyLeg(map: GLMapLike) {
+  const coords = latestLeg.get(map) ?? null;
+  const src = map.getSource(LEG_SOURCE) as { setData?: (d: unknown) => void } | undefined;
+  if (src?.setData) {
+    src.setData(legData(coords));
+    return;
+  }
+  if (!coords) return;
+  const color = legColor();
+  map.addSource(LEG_SOURCE, { type: 'geojson', data: legData(coords) });
+  const isLine = ['==', ['get', 'kind'], 'line'];
+  if (!map.getLayer(LEG_CASING)) {
+    map.addLayer({
+      id: LEG_CASING,
+      type: 'line',
+      source: LEG_SOURCE,
+      filter: isLine,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#fff', 'line-width': 11, 'line-opacity': 0.95 },
+    });
+  }
+  if (!map.getLayer(LEG_LINE)) {
+    map.addLayer({
+      id: LEG_LINE,
+      type: 'line',
+      source: LEG_SOURCE,
+      filter: isLine,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': color, 'line-width': 7 },
+    });
+  }
+  if (!map.getLayer(LEG_ENDS)) {
+    // Hollow where the leg starts, full where it ends: the direction reads without arrows.
+    map.addLayer({
+      id: LEG_ENDS,
+      type: 'circle',
+      source: LEG_SOURCE,
+      filter: ['!=', ['get', 'kind'], 'line'],
+      paint: {
+        'circle-radius': 7,
+        'circle-stroke-width': 3,
+        'circle-color': ['case', ['==', ['get', 'kind'], 'start'], '#fff', color],
+        'circle-stroke-color': ['case', ['==', ['get', 'kind'], 'start'], color, '#fff'],
+      },
+    });
+  }
+}
+
+/** Draws, moves or clears the lit leg, surviving a basemap switch like the radius does. */
+export function syncRouteFocus(map: GLMapLike, coords: [number, number][] | null | undefined) {
+  latestLeg.set(map, coords ?? null);
+  if (!listeningLeg.has(map)) {
+    listeningLeg.add(map);
+    map.on('style.load', () => {
+      try {
+        applyLeg(map);
+      } catch {
+        /* the next sync draws it */
+      }
+    });
+  }
+  if (!map.isStyleLoaded()) return;
+  try {
+    applyLeg(map);
+  } catch {
+    /* the style is mid-swap; style.load redraws it */
+  }
+}
+
+/** The "near this place" radius and the lit leg, kept in step with their props on a GL map. */
+export function useFocusOverlaysGL(
+  map: GLMapLike | null,
+  ready: boolean,
+  circle: NearbyCircle | null | undefined,
+  leg: [number, number][] | null | undefined
+) {
+  useEffect(() => {
+    if (ready && map) syncNearbyCircle(map, circle);
+  }, [map, ready, circle]);
+  useEffect(() => {
+    if (ready && map) syncRouteFocus(map, leg);
+  }, [map, ready, leg]);
 }

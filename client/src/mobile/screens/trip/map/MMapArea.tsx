@@ -22,6 +22,8 @@ import type { MMapAreaProps } from '../MTripShell'
 import type { Poi } from '../../../../components/Map/poiCategories'
 import type { ViewportPadding } from '../../../../utils/mapViewport'
 import { useNearbyMapOverlay } from '../../../../components/Planner/useNearbyMapOverlay'
+import { useRouteLegFocus } from '../../../../components/Map/useRouteLegFocus'
+import { RouteLegCard, RouteLegsPill } from '../../../../components/Map/RouteLegStepper'
 
 /** One array, so an explore set switched off does not move every pin on the stage. */
 const NO_POIS: Poi[] = []
@@ -255,6 +257,12 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
   const focusPending = focus.live && planner.mapFocusPoints.length > 0
   // "Near this place": the circle, and the camera on the whole radius while it is open.
   const nearbyOverlay = useNearbyMapOverlay()
+  // "Leg by leg": one leg of the day lit and framed. Not on the stage or the overview,
+  // which draw other routes than the day's.
+  const legFocus = useRouteLegFocus({
+    route: planner.route, segments: planner.routeSegments, dayId: planner.selectedDayId,
+    enabled: !onStage && !planner.overviewActive,
+  })
 
   // Handed over only once there are roads to frame, not as soon as the picker opens: the
   // engines refit whatever they hold when this padding changes, and while the router is
@@ -389,8 +397,9 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
         // screen; with nothing pending the stage frames itself.
         focusPoints={stageMap
           ? (focusPending ? planner.mapFocusPoints : stageMap.focusPoints)
-          : planner.overviewActive ? planner.tripOverview.focusPoints : nearbyOverlay?.focusPoints}
+          : planner.overviewActive ? planner.tripOverview.focusPoints : legFocus.overlay?.focusPoints ?? nearbyOverlay?.focusPoints}
         nearbyCircle={stageMap || planner.overviewActive ? null : nearbyOverlay?.circle}
+        routeFocus={stageMap || planner.overviewActive ? null : legFocus.overlay?.coords ?? null}
         routeVias={mapVias}
         showTransitRoutes={onStage ? false : planner.transitRoutesShown}
         // The route toggle belongs to one day, so the map needs that day to know
@@ -522,6 +531,8 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
               maxWidth={240}
             />
           )}
+          <RouteLegCard focus={legFocus} />
+          <RouteLegsPill focus={legFocus} />
           {!planner.roadtripActive && (
             <TripRouteOverviewPill active={planner.overviewShown} onToggle={planner.toggleOverview} />
           )}

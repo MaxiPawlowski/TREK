@@ -57,7 +57,7 @@ import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../../constants/mapDefault
 import { alongShortestArc, computeMapViewport, TILE_SIZE_GL } from '../../utils/mapViewport'
 import { onRealWorld } from '../../utils/worldCopy'
 import { bindPoiDropTarget } from './poiDropTarget'
-import { syncNearbyCircle, type GLMapLike } from './nearbyCircleGL'
+import { useFocusOverlaysGL, type GLMapLike } from './nearbyCircleGL'
 import {
   PLACE_CLUSTER_CIRCLE_LAYER_ID, PLACE_CLUSTER_COUNT_LAYER_ID, PLACE_CLUSTER_SOURCE_ID,
   addPlaceClusterLayers, drawClusterBubbles, expandCluster,
@@ -352,7 +352,7 @@ export function MapViewGL({
   fitKey = 0,
   focusPoints,
   focusKey,
-  nearbyCircle,
+  nearbyCircle, routeFocus,
   fitPadding,
   clusterLoosely = false,
   hazards,
@@ -450,7 +450,7 @@ export function MapViewGL({
   useTourMapLayersGL(mapReady ? readyMap : null, ferrataLayer, tourLayers)
   // Beneath the planned route's casing, the GL twin of the Leaflet pane order.
   useDawarichTrailGL(mapRef.current, mapReady, dawarichTrack, dawarichSelectedDate, 'trip-route-casing', dawarichHiddenDates)
-  useEffect(() => { if (mapReady && mapRef.current) syncNearbyCircle(mapRef.current as unknown as GLMapLike, nearbyCircle) }, [mapReady, nearbyCircle])
+  useFocusOverlaysGL(mapRef.current as unknown as GLMapLike | null, mapReady, nearbyCircle, routeFocus)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<Map<number, PlacePin>>(new Map())
   /** The count bubbles, one per cluster the source currently reports. */
