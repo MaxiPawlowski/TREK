@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { legFocusPoints, nameAt, sliceLeg, type LatLngTuple } from './routeLegs';
+import { legFocusPoints, legVisibleRoute, nameAt, sliceLeg, type LatLngTuple } from './routeLegs';
 
 // A line running north from Osaka Castle in ~111 m steps (1e-3 deg lat).
 const base: LatLngTuple = [34.6873, 135.5262];
@@ -49,5 +49,25 @@ describe('nameAt', () => {
   });
   it('is null when nothing is close', () => {
     expect(nameAt(step(9), places)).toBeNull();
+  });
+});
+
+describe('legVisibleRoute', () => {
+  const lines = [
+    [step(0), step(1)],
+    [step(2), step(3)],
+  ];
+  const walking = [true, false];
+  const segs = ['a', 'b', 'c'];
+  it('keeps the whole day while no leg is on show or the rest is not hidden', () => {
+    expect(legVisibleRoute({ index: null, restHidden: true }, lines, walking, segs).lines).toBe(lines);
+    expect(legVisibleRoute({ index: 1, restHidden: false }, lines, walking, segs).segments).toBe(segs);
+  });
+  it('leaves only the leg on show, as its time pill, with the rest hidden', () => {
+    expect(legVisibleRoute({ index: 1, restHidden: true }, lines, walking, segs)).toEqual({
+      lines: [],
+      walking: [],
+      segments: ['b'],
+    });
   });
 });

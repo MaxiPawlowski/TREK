@@ -22,7 +22,7 @@ import type { MMapAreaProps } from '../MTripShell'
 import type { Poi } from '../../../../components/Map/poiCategories'
 import type { ViewportPadding } from '../../../../utils/mapViewport'
 import { useNearbyMapOverlay } from '../../../../components/Planner/useNearbyMapOverlay'
-import { useRouteLegFocus } from '../../../../components/Map/useRouteLegFocus'
+import { legVisibleRoute, useRouteLegFocus } from '../../../../components/Map/useRouteLegFocus'
 import { RouteLegCard, RouteLegsPill } from '../../../../components/Map/RouteLegStepper'
 
 /** One array, so an explore set switched off does not move every pin on the stage. */
@@ -108,14 +108,15 @@ function alternativesFitPadding(insets: SafeInsets): ViewportPadding {
  * Top: the safe area, `--m-safe-top`'s 12px, the bar's 96px offset under it and its
  * 52px (42px segments in a padded bar), then a 12px gap. Bottom: the safe area, the
  * dock's 74px, the right column's 62px lift, the two round pills under the card
- * (2 x 44px and their gaps) and the card itself with a gap above it. The right side
+ * (2 x 44px and their gaps) and the card itself with a gap above it: 112px open, 44px
+ * folded down to its arrows. The right side
  * keeps clear of that column of round controls, the left of the compass.
  */
-function legFitPadding(insets: SafeInsets): ViewportPadding {
+function legFitPadding(insets: SafeInsets, minimized: boolean): ViewportPadding {
   return {
     top: insets.top + 12 + 96 + 52 + 12,
     right: 64, // rtl-lint-disable -- screen geometry handed to the map engine
-    bottom: insets.bottom + 74 + 62 + 2 * 44 + 2 * 8 + 76 + 12,
+    bottom: insets.bottom + 74 + 62 + 2 * 44 + 2 * 8 + (minimized ? 44 : 112) + 12,
     left: 40, // rtl-lint-disable -- screen geometry handed to the map engine
   }
 }
@@ -292,10 +293,13 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
   const insets = useSafeInsets(insetProbe)
   const framingOffers = onStage && planner.alternativeOverlays.length > 0
   const framingLeg = !framingOffers && legFocus.overlay != null
+  const legMinimized = legFocus.minimized
   const fitPadding = useMemo(
-    () => (framingOffers ? alternativesFitPadding(insets) : framingLeg ? legFitPadding(insets) : undefined),
-    [framingOffers, framingLeg, insets],
+    () => (framingOffers ? alternativesFitPadding(insets) : framingLeg ? legFitPadding(insets, legMinimized) : undefined),
+    [framingOffers, framingLeg, legMinimized, insets],
   )
+  // "Only this leg": the rest of the day stays off the map while a leg is on show.
+  const dayRoute = legVisibleRoute(legFocus, planner.route, planner.routeWalking, planner.routeSegments)
 
   /**
    * A pin on the road trip tab opens its stop: the sheet the chain row opens, not the
@@ -407,9 +411,9 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
         dawarichTrack={planner.dawarichTrail.track}
         places={stageMap ? stagePlaces : planner.mapPlaces}
         dayPlaces={onStage ? undefined : planner.dayPlaces}
-        route={stageMap ? stageMap.lines : planner.overviewActive ? planner.tripOverview.lines : planner.route}
+        route={stageMap ? stageMap.lines : planner.overviewActive ? planner.tripOverview.lines : dayRoute.lines}
         routeColors={stageMap ? stageMap.lineColors : planner.overviewActive ? planner.tripOverview.lineColors : undefined}
-        routeWalking={stageMap || planner.overviewActive ? undefined : planner.routeWalking}
+        routeWalking={stageMap || planner.overviewActive ? undefined : dayRoute.walking}
         accessLines={stageMap ? stageMap.accessLines : undefined}
         // A hit somebody tapped in the search sheet, a stop shown from its sheet, or the
         // stations the fuel search is offering take the camera while their day is on
@@ -425,7 +429,7 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
         // which automated transports may ride it (#2019).
         days={planner.days}
         selectedDayId={planner.selectedDayId}
-        routeSegments={onStage ? undefined : planner.overviewActive ? planner.tripOverview.segments : planner.routeSegments}
+        routeSegments={onStage ? undefined : planner.overviewActive ? planner.tripOverview.segments : dayRoute.segments}
         selectedPlaceId={planner.selectedPlaceId}
         onMarkerClick={onStage ? openStagePin : planner.handleMarkerClick}
         // Tap on empty map = deselect, same contract as desktop.
@@ -551,10 +555,11 @@ export default function MMapArea({ planner, shell }: MMapAreaProps) {
             />
           )}
           <RouteLegCard focus={legFocus} />
-          <RouteLegsPill focus={legFocus} />
           {!planner.roadtripActive && (
             <TripRouteOverviewPill active={planner.overviewShown} onToggle={planner.toggleOverview} />
           )}
+          {/* Lowest, nearest the thumb: the control a busy day is walked through with. */}
+          <RouteLegsPill focus={legFocus} />
         </div>
       )}
     </div>

@@ -14,7 +14,7 @@ import { LazyPanel } from './LazyPanel'
 import type { useTripPlanner } from './useTripPlanner'
 import type { useTripPlannerPage } from './useTripPlannerPage'
 import { useNearbyMapOverlay } from '../../components/Planner/useNearbyMapOverlay'
-import { useRouteLegFocus } from '../../components/Map/useRouteLegFocus'
+import { legVisibleRoute, useRouteLegFocus } from '../../components/Map/useRouteLegFocus'
 import { RouteLegCard, RouteLegsPill } from '../../components/Map/RouteLegStepper'
 
 type Planner = ReturnType<typeof useTripPlanner>
@@ -88,6 +88,8 @@ export function PlanMapStage({
     enabled: !roadtripActive && !overviewActive && !isMobile,
     places, mapPlaces, route, routeWalking, selectedPlaceId,
   })
+  // "Only this leg": the rest of the day stays off the map while a leg is on show.
+  const dayRoute = legVisibleRoute(legFocus, compared.route, compared.routeWalking, routeSegments)
   return (
     <>
       <MapView
@@ -96,9 +98,9 @@ export function PlanMapStage({
         dawarichHiddenDates={dawarichHiddenDates}
         places={roadtripActive ? roadtripMapPlaces : compared.places}
         dayPlaces={dayPlaces}
-        route={roadtripActive ? roadtripMapLines : overviewActive ? tripOverview.lines : compared.route}
+        route={roadtripActive ? roadtripMapLines : overviewActive ? tripOverview.lines : dayRoute.lines}
         routeColors={roadtripActive ? roadtripLineColors : overviewActive ? tripOverview.lineColors : compared.routeColors}
-        routeWalking={roadtripActive || overviewActive ? undefined : compared.routeWalking}
+        routeWalking={roadtripActive || overviewActive ? undefined : dayRoute.walking}
         followSelection={!mapLocked || isMobile}
         onToggleFollow={isMobile ? undefined : toggleMapLocked}
         routeVias={roadtripActive ? roadtripMapVias : routeVias}
@@ -109,7 +111,7 @@ export function PlanMapStage({
         // know which automated transports may ride it (#2019).
         days={days}
         selectedDayId={selectedDayId}
-        routeSegments={roadtripActive ? roadtripRoutes.segments : overviewActive ? tripOverview.segments : routeSegments}
+        routeSegments={roadtripActive ? roadtripRoutes.segments : overviewActive ? tripOverview.segments : dayRoute.segments}
         selectedPlaceId={selectedPlaceId}
         selectedPlace={selectedPlace}
         onMarkerClick={handleMarkerClick}
@@ -202,10 +204,10 @@ export function PlanMapStage({
             />
           )}
           <RouteLegCard focus={legFocus} />
-          {!roadtripActive && <RouteLegsPill focus={legFocus} />}
           {!roadtripActive && (
             <TripRouteOverviewPill active={overviewShown} onToggle={toggleOverview} />
           )}
+          {!roadtripActive && <RouteLegsPill focus={legFocus} />}
           {/* Stays in road-trip mode, unlike the overview: the route that was
               actually driven is the thing you most want beside the planned
               one. It is drawn, never applied. Correcting the plan from the

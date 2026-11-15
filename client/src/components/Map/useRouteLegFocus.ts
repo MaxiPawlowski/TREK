@@ -21,6 +21,12 @@ export interface RouteLegFocus {
   close: () => void;
   prev: () => void;
   next: () => void;
+  /** The card folded down to its arrows, so the map under it can be seen; the leg stays lit. */
+  minimized: boolean;
+  setMinimized: (v: boolean) => void;
+  /** Only the leg on show is drawn, the rest of the day's route is left off the map. */
+  restHidden: boolean;
+  toggleRest: () => void;
   /** What the map draws and frames for the leg on show. */
   overlay: { coords: LatLngTuple[]; focusPoints: LatLngTuple[] } | null;
 }
@@ -34,6 +40,24 @@ interface Args {
   enabled: boolean;
 }
 
+const REST_KEY = 'trek.map.legs.restHidden';
+
+function readRestHidden(): boolean {
+  try {
+    return window.localStorage.getItem(REST_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeRestHidden(v: boolean) {
+  try {
+    window.localStorage.setItem(REST_KEY, v ? '1' : '0');
+  } catch {
+    // Private mode or blocked storage: the choice lasts for this visit only.
+  }
+}
+
 /**
  * "Leg by leg" over the day's route, shared by the desktop plan map and the phone map.
  *
@@ -41,13 +65,19 @@ interface Args {
  * time lights that leg, frames the camera on it and names its two ends, so the order
  * the day is walked in can be read off the map. Kept per day: picking another day goes
  * back to the whole route, since leg 3 of Wednesday says nothing about Thursday.
+ *
+ * "Only this leg" leaves the rest of the day off the map altogether, and is remembered
+ * on the device: on a day of six stops the other five legs are exactly the tangle the
+ * stepper is there to get away from.
  */
 export function useRouteLegFocus({ route, segments, dayId, enabled }: Args): RouteLegFocus {
   const places = useTripStore((s) => s.places);
-  const [state, setState] = useState<{ dayId: number | null | undefined; index: number | null }>({
+  const [state, setState] = useState<{ dayId: number | null | undefined; index: number | null; minimized: boolean }>({
     dayId,
     index: null,
+    minimized: false,
   });
+  const [restHidden, setRestHidden] = useState(readRestHidden);
   // A new day, or the stepper switched off from outside, drops back to the whole day.
   const current = state.dayId === dayId && enabled ? state.index : null;
 
@@ -72,17 +102,34 @@ export function useRouteLegFocus({ route, segments, dayId, enabled }: Args): Rou
     return { coords, focusPoints: legFocusPoints(coords) };
   }, [index, route, segments]);
 
-  const go = useCallback((i: number | null) => setState({ dayId, index: i }), [dayId]);
+  const minimized = index != null && state.minimized;
+  const go = useCallback(
+    (i: number | null) => setState((s) => ({ dayId, index: i, minimized: i == null ? false : s.minimized })),
+    [dayId]
+  );
   const count = legs.length;
   return {
     legs: enabled ? legs : [],
     index,
     open: useCallback(() => {
-      if (count) go(0);
-    }, [count, go]),
+      if (count) setState({ dayId, index: 0, minimized: false });
+    }, [count, dayId]),
     close: useCallback(() => go(null), [go]),
     prev: useCallback(() => go(index == null ? 0 : Math.max(0, index - 1)), [go, index]),
     next: useCallback(() => go(index == null ? 0 : Math.min(count - 1, index + 1)), [go, index, count]),
+    minimized,
+    setMinimized: useCallback((v: boolean) => setState((s) => ({ ...s, minimized: v })), []),
+    restHidden,
+    toggleRest: useCallback(
+      () =>
+        setRestHidden((v) => {
+          writeRestHidden(!v);
+          return !v;
+        }),
+      []
+    ),
     overlay,
   };
 }
+
+export { legVisibleRoute } from './routeLegs';

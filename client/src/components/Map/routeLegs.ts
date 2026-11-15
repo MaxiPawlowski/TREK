@@ -99,3 +99,19 @@ export function nameAt(point: LatLngTuple, places: readonly NamedPoint[], maxM =
   }
   return best?.name ?? null;
 }
+
+/**
+ * The day's route as the map should draw it: all of it, or with "only this leg" on and
+ * a leg on show, none of it but that leg's time pill. The leg's own line is the
+ * highlight the map draws on top, so it never goes missing.
+ */
+export function legVisibleRoute<L, W, S>(
+  focus: { index: number | null; restHidden: boolean },
+  lines: L[] | null | undefined,
+  walking: W[] | null | undefined,
+  segments: S[] | null | undefined
+): { lines: L[] | null | undefined; walking: W[] | null | undefined; segments: S[] | null | undefined } {
+  if (focus.index == null || !focus.restHidden) return { lines, walking, segments };
+  const seg = segments?.[focus.index];
+  return { lines: [], walking: [], segments: seg ? [seg] : [] };
+}
